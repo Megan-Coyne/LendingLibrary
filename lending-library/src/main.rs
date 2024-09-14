@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::{self, Write}};
 
 // Struct to represent a Book
 struct Book {
@@ -35,9 +35,10 @@ fn add_book(catalog: &mut HashMap<String, Book>, title: &str, author: &str) {
 
 // List all available books in the catalog
 fn list_available_books(catalog: &HashMap<String, Book>) {
-    for (title, book) in catalog {
+    println!("Available books:");
+    for (_title, book) in catalog {
         if book.is_available {
-            println!("Available: {}", title);
+            println!("{} by {}", book.title, book.author);
         }
     }
 }
@@ -78,26 +79,65 @@ fn return_book(user: &mut User, catalog: &mut HashMap<String, Book>, book_title:
     }
 }
 
+fn get_input(prompt: &str) -> String {
+    print!("{}", prompt);
+    io::stdout().flush().unwrap(); // Ensures the prompt is displayed before waiting for input
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read input");
+    input.trim().to_string() // Removes any trailing newlines or spaces
+}
+
 // Example usage
 fn main() {
-    let mut library: HashMap<String, Book> = HashMap::new(); // Library catalog
-    let mut user = User::new("Alice"); // Create a new user
+    let mut library: HashMap<String, Book> = HashMap::new();
 
-    // Add books to the library
-    add_book(&mut library, "The Catcher in the Rye", "J.D. Salinger");
-    add_book(&mut library, "1984", "George Orwell");
+    println!("Welcome to the Lending Library Program!");
 
-    // List available books
-    println!("Available books:");
-    list_available_books(&library);
+    let user_name = get_input("Enter your name: ");
+    let mut user = User::new(&user_name);
 
-    // Borrow a book
-    borrow_book(&mut user, &mut library, "1984");
-    println!("\nAvailable books after borrowing:");
-    list_available_books(&library);
+    loop {
+        // Display menu options
+        println!("\nLibrary Menu:");
+        println!("1. Add a book to the catalog");
+        println!("2. List available books");
+        println!("3. Borrow a book");
+        println!("4. Return a book");
+        println!("5. Exit");
 
-    // Return a book
-    return_book(&mut user, &mut library, "1984");
-    println!("\nAvailable books after returning:");
-    list_available_books(&library);
+        // Get user's choice
+        let choice = get_input("Choose an option (1-5): ");
+
+        match choice.as_str() {
+            "1" => {
+                // Add a book to the catalog
+                let title = get_input("Enter the book title: ");
+                let author = get_input("Enter the author: ");
+                add_book(&mut library, &title, &author);
+                println!("Added '{}' by {} to the catalog.", title, author);
+            }
+            "2" => {
+                // List available books
+                list_available_books(&library);
+            }
+            "3" => {
+                // Borrow a book
+                let book_title = get_input("Enter the title of the book you want to borrow: ");
+                borrow_book(&mut user, &mut library, &book_title);
+            }
+            "4" => {
+                // Return a book
+                let book_title = get_input("Enter the title of the book you want to return: ");
+                return_book(&mut user, &mut library, &book_title);
+            }
+            "5" => {
+                // Exit the program
+                println!("Goodbye!");
+                break;
+            }
+            _ => {
+                println!("Invalid option. Please choose a number between 1 and 5.");
+            }
+        }
+    }
 }
